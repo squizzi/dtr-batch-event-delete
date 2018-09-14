@@ -3,7 +3,8 @@
 
 # Usage/help text
 usage_text () {
-    echo -e "Usage: docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock -l <batch delete limit>"
+    echo -e "Usage: docker run --rm -it -v
+    /var/run/docker.sock:/var/run/docker.sock -l <batch delete limit> (default 1000)"
     exit 1
 }
 
@@ -29,6 +30,12 @@ done
 
 
 # ---
+
+# Make sure there's a LIMIT set, if not, default to 1000
+if [ -z $LIMIT ]; then
+    echo "No batch delete limit specified, using default of 1000"
+    LIMIT=1000
+fi
 
 # Check for docker socket
 if [ ! -e "/var/run/docker.sock" ]; then
