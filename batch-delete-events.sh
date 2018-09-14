@@ -8,14 +8,14 @@ usage_text () {
 }
 
 # Set desired limit via $LIMIT, this will set how many deletes will occur
-# at one time (default 1000)
-while getopts "hl:" opt; do
+# at one time
+while getopts ":l:h" opt; do
     case $opt in
         h)
           usage_text
           ;;
         l)
-          LIMIT=$OPTARG
+          LIMIT=${OPTARG}
           ;;
         \?)
           usage_text
@@ -29,6 +29,13 @@ done
 
 
 # ---
+
+# Check for docker socket
+if [ ! -e "/var/run/docker.sock" ]; then
+    echo -e "Docker not detected, did you forget to mount docker.sock?"
+    usage_text
+    exit 1
+fi
 
 # Check to see if dtr-rethinkdb is running before continuing
 RETHINKDB=`docker ps -q --filter name=dtr-rethinkdb`
