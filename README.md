@@ -17,5 +17,5 @@ Would perform a deletion of 1000 events from the table (in no particular order)
 with a limit of 50 deletions per batch.
 
 **Note:** 
-* `-l` defines the amount of deletions that will occur at once.  If not specified the default limit is 1000.
-* `-c` defines the number of events to consider for deletion.  This flag overrides the batch calculation that occurs if it is unset.
+* `-l` defines the **limit** of deletions that will occur at once.  If not specified the default limit is 1000.
+* `-c` defines the **event count** to consider for deletion.  This flag overrides the batch calculation that occurs if it is unset.
