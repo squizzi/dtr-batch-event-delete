@@ -1,6 +1,5 @@
 #!/bin/sh
 ## Batch delete an entire DTR events table
-set -x
 
 # Usage/help text
 usage_text () {
