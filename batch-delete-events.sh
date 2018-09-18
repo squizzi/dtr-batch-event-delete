@@ -33,17 +33,6 @@ while getopts ":l:c:h" opt; do
   esac
 done
 
-# Opt validation if opts are given
-if [[ ! -z $COUNT ]] && [[ ! $COUNT =~ ^-?[0-9]+$ ]]; then
-   echo -e "Error: Option -c must be numeric"
-   exit 1
-fi
-
-if [[ ! -z $LIMIT ]] && [[ ! $LIMIT =~ ^-?[0-9]+$ ]]; then
-    echo -e "Error: Option -l must be numeric"
-    exit 1
-fi
-
 # ---
 
 # Make sure there's a LIMIT set, if not, default to 1000
@@ -77,11 +66,6 @@ fi
 if [ -z $COUNT]; then
     echo -e "Calculating length of events table..."
     COUNT=$(echo "r.db('dtr2').table('events').count()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:2.5.0 non-interactive)
-fi
-if [[ ! $COUNT =~ ^-?[0-9]+$ ]]; then
-    # If no number is found in the events table
-    echo -e "Error: Unable to calculate length of events table: $COUNT"
-    exit 1
 fi
 if [ $COUNT -eq 0 ]; then
     echo -e "Nothing to delete, exiting"
