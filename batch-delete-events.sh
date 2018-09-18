@@ -3,20 +3,25 @@
 
 # Usage/help text
 usage_text () {
-    echo -e "Usage: docker run --rm -it -v
-    /var/run/docker.sock:/var/run/docker.sock -l <batch delete limit> (default 1000)"
+    echo -e "Usage: docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock squizzi/dtr-batch-delete-events -l <limit> -c <count>"
+    echo -e "-l       Set the desired batch deletion limit (default 1000)"
+    echo -e "-c       Override the automated event calculation with a desired number of events"
     exit 1
 }
 
 # Set desired limit via $LIMIT, this will set how many deletes will occur
 # at one time
-while getopts ":l:h" opt; do
+# If desired, event count can also be overwritten via $COUNT
+while getopts ":l:c:h" opt; do
     case $opt in
         h)
           usage_text
           ;;
         l)
           LIMIT=${OPTARG}
+          ;;
+        c)
+          COUNT=${OPTARG}
           ;;
         \?)
           usage_text
@@ -28,12 +33,22 @@ while getopts ":l:h" opt; do
   esac
 done
 
+# Opt validation if opts are given
+if [[ ! -z $COUNT ]] && [[ ! $COUNT =~ ^-?[0-9]+$ ]]; then
+   echo -e "Error: Option -c must be numeric"
+   exit 1
+fi
+
+if [[ ! -z $LIMIT ]] && [[ ! $LIMIT =~ ^-?[0-9]+$ ]]; then
+    echo -e "Error: Option -l must be numeric"
+    exit 1
+fi
 
 # ---
 
 # Make sure there's a LIMIT set, if not, default to 1000
 if [ -z $LIMIT ]; then
-    echo "No batch delete limit specified, using default of 1000"
+    echo -e "No batch delete limit specified, using default of 1000"
     LIMIT=1000
 fi
 
@@ -47,25 +62,29 @@ fi
 # Check to see if dtr-rethinkdb is running before continuing
 RETHINKDB=`docker ps -q --filter name=dtr-rethinkdb`
 if [ -z "$RETHINKDB" ]; then
-    echo "Error: dtr-rethinkdb does not appear to be running, exiting"
+    echo -e "Error: dtr-rethinkdb does not appear to be running, exiting"
     exit 1
 fi
 
 # Get the current REPLICA_ID
 REPLICA_ID=$(docker inspect $(docker ps -q --filter name=dtr-rethinkdb) --format {{.Name}} | cut -d '-' -f3)
 if [ -z "$REPLICA_ID" ]; then
-    echo "Error: DTR replica id could not be determined"
+    echo -e "Error: DTR replica id could not be determined"
     exit 1
 fi
 
-# Determine the count of the events table
-echo "Calculating length of events table..."
-COUNT=$(echo "r.db('dtr2').table('events').count()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:2.5.0 non-interactive)
-if [ -z "$COUNT" ]; then
-    echo "Error: Unable to calculate length of events table, exiting"
-    exit 1
-elif [ $COUNT -eq 0 ]; then
-    echo "Nothing to delete, exiting"
+# Determine the count of the events table if -c is not given
+if [ -z $COUNT]; then
+    echo -e "Calculating length of events table..."
+    COUNT=$(echo "r.db('dtr2').table('events').count()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:2.5.0 non-interactive)
+    if [[ ! $COUNT =~ ^-?[0-9]+$ ]]; then
+        # If no number is found in the events table
+        echo -e "Error: Unable to calculate length of events table: $COUNT"
+        exit 1
+    fi
+fi
+if [ $COUNT -eq 0 ]; then
+    echo -e "Nothing to delete, exiting"
     exit 1
 fi
 
@@ -74,7 +93,7 @@ fi
 # we always run once to catch less then $LIMIT values
 MAX=$(expr $COUNT / $LIMIT + 1)
 if [ -z "$MAX" ]; then
-    echo "Error: Unable to calculate number of iterations to run, exiting"
+    echo -e "Error: Unable to calculate number of iterations to run, exiting"
     exit 1
 fi
 
@@ -86,4 +105,4 @@ do
     echo -e "\n"$(date) "Completed batch: $i of $MAX"
 done
 
-echo "Done: events table deleted"
+echo -e "Done: events table deleted"
