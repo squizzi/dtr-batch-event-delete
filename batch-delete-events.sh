@@ -77,11 +77,11 @@ fi
 if [ -z $COUNT]; then
     echo -e "Calculating length of events table..."
     COUNT=$(echo "r.db('dtr2').table('events').count()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:2.5.0 non-interactive)
-    if [[ ! $COUNT =~ ^-?[0-9]+$ ]]; then
-        # If no number is found in the events table
-        echo -e "Error: Unable to calculate length of events table: $COUNT"
-        exit 1
-    fi
+fi
+if [[ ! $COUNT =~ ^-?[0-9]+$ ]]; then
+    # If no number is found in the events table
+    echo -e "Error: Unable to calculate length of events table: $COUNT"
+    exit 1
 fi
 if [ $COUNT -eq 0 ]; then
     echo -e "Nothing to delete, exiting"
@@ -97,8 +97,20 @@ if [ -z "$MAX" ]; then
     exit 1
 fi
 
+# Prompt for deletion
+echo -e "Preparing to delete $COUNT events from the DTR events table in batches of $LIMIT"
+while true;
+do
+    read -r -p "Continue? Y/N: " response
+    if [[ $response =~ ^([yY][eE][sS]|[yY])$ ]]
+    then
+        break
+    else
+        exit 0
+    fi
+done
+
 # Start deleting in batches
-echo -e "Deleting $COUNT events from the DTR events table in batches of $LIMIT, this may take awhile..."
 for i in `seq $MAX`;
 do
     echo "r.db('dtr2').table('events').limit($LIMIT).delete()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:2.5.0 non-interactive
@@ -106,3 +118,4 @@ do
 done
 
 echo -e "Done: events table deleted"
+exit 0
