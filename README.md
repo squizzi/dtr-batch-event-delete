@@ -6,12 +6,17 @@ bottlenecks.
 1. Log in to the DTR host, or set docker client directly to DTR docker daemon. [Docker CLI Options](https://docs.docker.com/engine/reference/commandline/cli/)
 2. Run the following command.
 
+For example:
+
 ```
 docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
-    squizzi/dtr-batch-event-delete:latest -l <batch delete limit>
+    squizzi/dtr-batch-event-delete:latest -l 50 -c 1000
 ```
 
-> Note: if `-l` is not specified the default limit is 1000
+Would perform a deletion of 1000 events from the table (in no particular order)
+with a limit of 50 deletions per batch.
 
-`Batch delete limit` defines the amount of deletions that will occur at once.
-The number of batches that will need to run will be calculated and displayed prior to executing the deletions.
+**Note:** 
+    * `-l` defines the amount of deletions that will occur at once.  If not specified the default limit is 1000.
+    * `-c` defines the number of events to consider for deletion.  This flag overrides the batch calculation that occurs if it is unset.
+      unset.
