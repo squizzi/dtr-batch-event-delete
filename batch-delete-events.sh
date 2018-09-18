@@ -1,5 +1,6 @@
 #!/bin/sh
 ## Batch delete an entire DTR events table
+set -x
 
 # Usage/help text
 usage_text () {
@@ -63,7 +64,7 @@ if [ -z "$REPLICA_ID" ]; then
 fi
 
 # Determine the count of the events table if -c is not given
-if [ -z $COUNT]; then
+if [ -z $COUNT ]; then
     echo -e "Calculating length of events table..."
     COUNT=$(echo "r.db('dtr2').table('events').count()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:2.5.0 non-interactive)
 fi
@@ -81,19 +82,7 @@ if [ -z "$MAX" ]; then
     exit 1
 fi
 
-# Prompt for deletion
-echo -e "Preparing to delete $COUNT events from the DTR events table in batches of $LIMIT"
-while true;
-do
-    read -r -p "Continue? Y/N: " response
-    if [[ $response =~ ^([yY][eE][sS]|[yY])$ ]]
-    then
-        break
-    else
-        exit 0
-    fi
-done
-
+echo -e "Deleting $COUNT events from the DTR events table in batches of $LIMIT"
 # Start deleting in batches
 for i in `seq $MAX`;
 do
