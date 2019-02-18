@@ -48,13 +48,6 @@ if [ ! -e "/var/run/docker.sock" ]; then
     exit 1
 fi
 
-# Determine DTR_VERSION
-DTR_VERSION=$(docker inspect $(docker ps -q --filter name=dtr | head -n1) --format {{.Config.Image}} | cut -d':' -f2)
-if [ -z "$DTR_VERSION" ]; then
-  echo -e "Error: Unable to determine DTR version, exiting"
-  exit 1
-fi
-
 # Check to see if dtr-rethinkdb is running before continuing
 RETHINKDB=`docker ps -q --filter name=dtr-rethinkdb`
 if [ -z "$RETHINKDB" ]; then
@@ -72,7 +65,7 @@ fi
 # Determine the count of the events table if -c is not given
 if [ -z $COUNT ]; then
     echo -e "Calculating number of tags needing to be modified..."
-    COUNT=$(echo "r.db('dtr2').table('tags').filter({'authorNamespace' : ''}).count()" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:$DTR_VERSION non-interactive)
+    COUNT=$(echo "r.db('dtr2').table('tags').filter({'authorNamespace' : ''}).count()" | docker run -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca dockerhubenterprise/rethinkcli:v2.2.0-ni non-interactive)
 fi
 if [ $COUNT -eq 0 ]; then
     echo -e "Nothing to delete, exiting"
@@ -92,7 +85,7 @@ echo -e "Deleting $COUNT events from the DTR events table in batches of $LIMIT"
 # Start deleting in batches
 for i in `seq $MAX`;
 do
-    echo "r.db('dtr2').table('tags').filter({'authorNamespace' : ''}).limit($LIMIT).update({'authorNamespace' : '00000000-0000-0000-0000-000000000000'})" | docker run --entrypoint=rethinkcli -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca docker/dtr-rethink:$DTR_VERSION non-interactive
+    echo "r.db('dtr2').table('tags').filter({'authorNamespace' : ''}).limit($LIMIT).update({'authorNamespace' : '00000000-0000-0000-0000-000000000000'})" | docker run -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca dockerhubenterprise/rethinkcli:v2.2.0-ni non-interactive
     echo -e "\n"$(date) "Completed batch: $i of $MAX"
 done
 
