@@ -1,4 +1,4 @@
-# Batch Delete Events Table in DTR
+# Batch Tools for DTR
 Tool for deleting the events table in batches to prevent performance
 bottlenecks.
 
