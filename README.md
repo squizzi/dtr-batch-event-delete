@@ -10,7 +10,7 @@ For example:
 
 ```
 docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock \
-    squizzi/dtr-fix-authorNamespace:latest -l 50 -c 1000
+    squizzi/dtr-fix-authornamespace:latest -l 50 -c 1000
 ```
 
 Would perform a fix of 1000 tags from the table (in no particular order)

@@ -3,7 +3,7 @@
 
 # Usage/help text
 usage_text () {
-    echo -e "Usage: docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock squizzi/dtr-fix-authorNamespace -l <limit> -c <count>"
+    echo -e "Usage: docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock squizzi/dtr-fix-authornamespace -l <limit> -c <count>"
     echo -e "-l       Set the desired batch limit (default 1000)"
     echo -e "-c       Override the automated event calculation with a desired number of events"
     exit 1
