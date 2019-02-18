@@ -1,5 +1,5 @@
 #!/bin/sh
-## Batch delete an entire DTR events table
+##
 
 # Usage/help text
 usage_text () {
@@ -9,7 +9,7 @@ usage_text () {
     exit 1
 }
 
-# Set desired limit via $LIMIT, this will set how many deletes will occur
+# Set desired limit via $LIMIT, this will set how many modifications will occur
 # at one time
 # If desired, event count can also be overwritten via $COUNT
 while getopts ":l:c:h" opt; do
@@ -68,7 +68,7 @@ if [ -z $COUNT ]; then
     COUNT=$(echo "r.db('dtr2').table('tags').filter({'authorNamespace' : ''}).count()" | docker run -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca dockerhubenterprise/rethinkcli:v2.2.0-ni non-interactive)
 fi
 if [ $COUNT -eq 0 ]; then
-    echo -e "Nothing to delete, exiting"
+    echo -e "Nothing to modify, exiting"
     exit 1
 fi
 
@@ -81,8 +81,7 @@ if [ -z "$MAX" ]; then
     exit 1
 fi
 
-echo -e "Deleting $COUNT events from the DTR events table in batches of $LIMIT"
-# Start deleting in batches
+echo -e "Modifying $COUNT tags from the DTR tags table in batches of $LIMIT"
 for i in `seq $MAX`;
 do
     echo "r.db('dtr2').table('tags').filter({'authorNamespace' : ''}).limit($LIMIT).update({'authorNamespace' : '00000000-0000-0000-0000-000000000000'})" | docker run -i --rm --net dtr-ol -e DTR_REPLICA_ID=$REPLICA_ID -v dtr-ca-$REPLICA_ID:/ca dockerhubenterprise/rethinkcli:v2.2.0-ni non-interactive
