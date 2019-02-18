@@ -4,6 +4,6 @@ MAINTAINER Kyle Squizzato: 'kyle.squizzato@docker.com'
 
 WORKDIR /
 
-COPY ./batch-delete-events.sh /
+COPY ./batch-fix-authorNamespace.sh /
 
-ENTRYPOINT ["/bin/sh", "/batch-delete-events.sh"]
+ENTRYPOINT ["/bin/sh", "/batch-fix-authorNamespace.sh"]
